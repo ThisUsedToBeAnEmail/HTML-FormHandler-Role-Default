@@ -15,30 +15,41 @@ use warnings;
 
 use Moose::Role;
 
+has 'dbic_column_spec' => (
+    trait => ['Hash'],
+    is => 'ro',
+    isa => 'HashRef',
+    lazy_build => 1,
+    handles => {
+        field_spec => 'kv',
+    }
+); 
+
+sub _build_dbic_column_spec {
+    return  $_[0]->item->result_source->columns_info;
+}
+
 has 'default_column_spec' => (
     trait => ['Hash'],
     is => 'ro',
     isa => 'HashRef',
     lazy_build => 1,
     handles => {
-        option_pairs => 'kv',
+        column_spec => 'kv',
     }
 );
 
 sub _build_default_column_spec {
-    my $columns = $_[0]->item->result_source->columns_info;
     my $default_column_spec;
-    for my $name (keys %{$columns}){
-        next if $columns->{$name}->{data_type} eq 'timestamp';
-        if (my $default = $columns->{$name}->{default_value}) {
-            $default_column_spec->{$name} = $default;
-        }
+    for my $field ($_[0]->field_spec) {
+        exists $field->[1]->{default_value} && $field->[1]->{data_type} ne 'timestamp' or next;
+        $default_column_spec->{$field->[0]} = $field->[1]->{default_value};
     }
     return $default_column_spec;
 }
 
 before render => sub {
-    for my $pair ( $_[0]->default_column_spec->option_pairs ) {
+    for my $column ( $_[0]->column_spec ) {
         unless ($_[0]->field($pair->[0])->value) {
             $_[0]->field($pair->[0])->value($pair->[1]);
         }

@@ -16,7 +16,7 @@ use warnings;
 use Moose::Role;
 
 has 'dbic_column_info' => (
-    trait => ['Hash'],
+    traits => ['Hash'],
     is => 'ro',
     isa => 'HashRef',
     lazy_build => 1,
@@ -30,7 +30,7 @@ sub _build_dbic_column_info {
 }
 
 has 'default_column_info' => (
-    trait => ['Hash'],
+    traits => ['Hash'],
     is => 'ro',
     isa => 'HashRef',
     lazy_build => 1,
@@ -42,7 +42,7 @@ has 'default_column_info' => (
 sub _build_default_column_info {
     my $default_column_info;
     for my $field ($_[0]->field_spec) {
-        $_[0]->field_exists($field->[0]) && exists $field->[1]->{default_value} 
+        $_[0]->_field_exists($field->[0]) && exists $field->[1]->{default_value} 
             && $field->[1]->{data_type} ne 'timestamp' or next;
         $default_column_info->{$field->[0]} = $field->[1]->{default_value};
     }

@@ -30,5 +30,5 @@ my $form = Test::Form->new(params => { });
 
 my $html = $form->render;
 
-use feature 'say';
-say $html->field('test')->value;
+use Data::Dumper;
+warn Dumper $html;

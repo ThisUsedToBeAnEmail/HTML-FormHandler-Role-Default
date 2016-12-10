@@ -42,16 +42,21 @@ has 'default_column_spec' => (
 sub _build_default_column_spec {
     my $default_column_spec;
     for my $field ($_[0]->field_spec) {
-        exists $field->[1]->{default_value} && $field->[1]->{data_type} ne 'timestamp' or next;
+        $_[0]->field_exists($field->[0]) && exists $field->[1]->{default_value} 
+            && $field->[1]->{data_type} ne 'timestamp' or next;
         $default_column_spec->{$field->[0]} = $field->[1]->{default_value};
     }
     return $default_column_spec;
 }
 
+sub _field_exists {
+    $_[0]->field($_[1]) or 0;
+}
+
 before render => sub {
     for my $column ( $_[0]->column_spec ) {
-        unless ($_[0]->field($pair->[0])->value) {
-            $_[0]->field($pair->[0])->value($pair->[1]);
+        unless ($_[0]->field($column->[0])->value) {
+            $_[0]->field($column->[0])->value($column->[1]);
         }
     }
 };        

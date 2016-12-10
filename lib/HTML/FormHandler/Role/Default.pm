@@ -15,7 +15,7 @@ use warnings;
 
 use Moose::Role;
 
-has 'dbic_column_spec' => (
+has 'dbic_column_info' => (
     trait => ['Hash'],
     is => 'ro',
     isa => 'HashRef',
@@ -25,28 +25,28 @@ has 'dbic_column_spec' => (
     }
 ); 
 
-sub _build_dbic_column_spec {
+sub _build_dbic_column_info {
     return  $_[0]->item->result_source->columns_info;
 }
 
-has 'default_column_spec' => (
+has 'default_column_info' => (
     trait => ['Hash'],
     is => 'ro',
     isa => 'HashRef',
     lazy_build => 1,
     handles => {
-        column_spec => 'kv',
+        column_info => 'kv',
     }
 );
 
-sub _build_default_column_spec {
-    my $default_column_spec;
+sub _build_default_column_info {
+    my $default_column_info;
     for my $field ($_[0]->field_spec) {
         $_[0]->field_exists($field->[0]) && exists $field->[1]->{default_value} 
             && $field->[1]->{data_type} ne 'timestamp' or next;
-        $default_column_spec->{$field->[0]} = $field->[1]->{default_value};
+        $default_column_info->{$field->[0]} = $field->[1]->{default_value};
     }
-    return $default_column_spec;
+    return $default_column_info;
 }
 
 sub _field_exists {
@@ -54,7 +54,7 @@ sub _field_exists {
 }
 
 before render => sub {
-    for my $column ( $_[0]->column_spec ) {
+    for my $column ( $_[0]->column_info ) {
         unless ($_[0]->field($column->[0])->value) {
             $_[0]->field($column->[0])->value($column->[1]);
         }
